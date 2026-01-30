@@ -1,0 +1,92 @@
+[
+  {
+    "batch_id": "batch_20260130_185254",
+    "created_at": "2026-01-30T18:52:54.376330",
+    "source": "manual_paste",
+    "sections": [
+      {
+        "section_title": "1. Background and Scope",
+        "section_text": "Automated financial intelligence systems increasingly rely on machine learning models to extract, reason over, and verify information in high-stakes regulatory and compliance contexts, including ESG reporting, risk assessment, and cross-border financial disclosure analysis (Christensen et al., 2021, [https://doi.org/10.1007/s11142-021-09609-5](https://doi.org/10.1007/s11142-021-09609-5)). As these systems scale globally, they must operate across languages, regulatory regimes, and heterogeneous data sources while maintaining auditability and cost efficiency (Leippold et al., 2022, [https://doi.org/10.1016/j.jfineco.2022.03.008](https://doi.org/10.1016/j.jfineco.2022.03.008)).\n\nThis literature review examines research on verification-oriented reasoning agents that combine neural models, external evidence retrieval, and explicit control mechanisms. The scope covers retrieval-augmented reasoning, hallucination mitigation, multilingual transfer, and cost-aware decision policies, with a focus on financial and regulatory intelligence. Purely generative or descriptive NLP systems without verification or cost considerations are excluded.\n\n---"
+      },
+      {
+        "section_title": "2. Historical Development of the Field",
+        "section_text": "Early automated reasoning systems in finance were predominantly rule-based, encoding compliance logic and accounting constraints explicitly but lacking scalability and robustness to linguistic variation (Baldwin et al., 2006, [https://doi.org/10.1016/j.intacc.2006.03.002](https://doi.org/10.1016/j.intacc.2006.03.002)). The rise of statistical NLP and later deep learning shifted emphasis toward probabilistic inference from text and numerical data, enabling large-scale processing but weakening guarantees of logical correctness (LeCun et al., 2015, [https://doi.org/10.1038/nature14539](https://doi.org/10.1038/nature14539)).\n\nThe emergence of large language models (LLMs) further amplified this trade-off by enabling fluent reasoning-like outputs while introducing systematic hallucination and overconfidence, particularly in domains where factual grounding is essential (Maynez et al., 2020, [https://doi.org/10.18653/v1/2020.acl-main.173](https://doi.org/10.18653/v1/2020.acl-main.173)). These failures motivated renewed interest in verification-centric architectures that explicitly separate reasoning from evidence validation (Ji et al., 2023, [https://doi.org/10.1145/3571730](https://doi.org/10.1145/3571730)).\n\n---"
+      },
+      {
+        "section_title": "3. Dominant Approaches and Methods",
+        "section_text": "The dominant contemporary approach to verifiable reasoning is retrieval-augmented generation (RAG), in which neural models retrieve external documents and condition generation on retrieved evidence (Lewis et al., 2020, [https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)). RAG systems assume that access to relevant documents implicitly constrains model outputs, an assumption shown to improve factual accuracy in open-domain question answering (Izacard & Grave, 2021, [https://arxiv.org/abs/2007.01282](https://arxiv.org/abs/2007.01282)).\n\nIn multilingual settings, cross-lingual transformers enable transfer across languages by learning shared representations, reducing the need for language-specific pipelines (Devlin et al., 2019, [https://arxiv.org/abs/1810.04805](https://arxiv.org/abs/1810.04805)). These approaches are widely adopted due to their flexibility and performance but typically lack explicit mechanisms to control retrieval cost or verify reasoning sufficiency.\n\n---"
+      },
+      {
+        "section_title": "4. Motivations for Alternative or Extended Approaches",
+        "section_text": "Empirical studies demonstrate that RAG systems frequently over-retrieve evidence, incurring unnecessary computational cost without proportional gains in accuracy (Asai et al., 2023, [https://arxiv.org/abs/2305.14627](https://arxiv.org/abs/2305.14627)). Conversely, insufficient retrieval leads to hallucinated reasoning chains, particularly when models rely on parametric knowledge rather than verifiable sources (Ji et al., 2023, [https://doi.org/10.1145/3571730](https://doi.org/10.1145/3571730)).\n\nThese limitations motivated the development of adaptive and confidence-aware verification strategies, where models dynamically decide whether external evidence is required based on internal uncertainty or disagreement signals (Manakul et al., 2023, [https://arxiv.org/abs/2303.08896](https://arxiv.org/abs/2303.08896)). In financial domains, where verification cost and latency are non-trivial, such adaptive control becomes a first-order systems concern rather than an optimization detail.\n\n---"
+      },
+      {
+        "section_title": "5. Comparative Analysis of Key Contributions",
+        "section_text": "Chain-of-Thought prompting improved reasoning transparency but was shown to increase hallucination rates when intermediate steps are not grounded in evidence (Wei et al., 2022, [https://arxiv.org/abs/2201.11903](https://arxiv.org/abs/2201.11903)). Chain-of-Verification (CoVe) methods explicitly introduced verification stages to re-evaluate generated claims against retrieved sources, reducing factual errors in controlled settings (Dhuliawala et al., 2023, [https://arxiv.org/abs/2309.11495](https://arxiv.org/abs/2309.11495)).\n\nMore recent agentic frameworks integrate planning, retrieval, and verification into multi-step controllers, enabling conditional execution of expensive operations (Yao et al., 2023, [https://arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)). Comparative analyses indicate that such agents outperform static pipelines in robustness but introduce new challenges related to cost predictability and audit trace completeness.\n\n---"
+      },
+      {
+        "section_title": "6. Data, Evidence, and Evaluation Practices",
+        "section_text": "Evaluation of verification agents extends beyond task accuracy to include retrieval efficiency, contradiction detection, and explanation faithfulness (Kry\u015bci\u0144ski et al., 2020, [https://doi.org/10.18653/v1/2020.emnlp-main.657](https://doi.org/10.18653/v1/2020.emnlp-main.657)). Financial intelligence systems often rely on structured disclosures such as XBRL filings, complemented by unstructured textual evidence from reports and regulatory guidance (Debreceny et al., 2010, [https://doi.org/10.2308/jis.2010.24.2.167](https://doi.org/10.2308/jis.2010.24.2.167)).\n\nHowever, multilingual evaluation remains underdeveloped, with most benchmarks centered on English-language corpora, limiting insights into cross-lingual degradation and transfer reliability (Ruder et al., 2019, [https://arxiv.org/abs/1901.07291](https://arxiv.org/abs/1901.07291)).\n\n---"
+      },
+      {
+        "section_title": "7. Applications and Impact",
+        "section_text": "Cost-aware verification agents enable scalable compliance screening, ESG claim validation, and cross-border regulatory monitoring by reducing unnecessary evidence retrieval while preserving auditability (Christensen et al., 2021, [https://doi.org/10.1007/s11142-021-09609-5](https://doi.org/10.1007/s11142-021-09609-5)). In industry settings, such systems support continuous monitoring pipelines that balance latency, cost, and correctness, aligning with emerging regulatory technology practices (Leippold et al., 2022, [https://doi.org/10.1016/j.jfineco.2022.03.008](https://doi.org/10.1016/j.jfineco.2022.03.008)).\n\nThe broader impact extends to trustworthy AI research, where cost-sensitive verification is increasingly recognized as essential for real-world deployment rather than an academic afterthought (Ji et al., 2023, [https://doi.org/10.1145/3571730](https://doi.org/10.1145/3571730)).\n\n---"
+      },
+      {
+        "section_title": "8. Limitations and Open Challenges",
+        "section_text": "Adaptive verification policies depend on reliable uncertainty estimation, which remains an open problem for large neural models, particularly under distributional shift (Ovadia et al., 2019, [https://arxiv.org/abs/1906.02530](https://arxiv.org/abs/1906.02530)). Multilingual reasoning further complicates verification due to uneven evidence availability and translation noise (Ruder et al., 2019, [https://arxiv.org/abs/1901.07291](https://arxiv.org/abs/1901.07291)).\n\nAdditionally, audit trace generation introduces storage and interpretability challenges, as long reasoning chains may overwhelm human reviewers if not carefully structured (Dhuliawala et al., 2023, [https://arxiv.org/abs/2309.11495](https://arxiv.org/abs/2309.11495)).\n\n---"
+      },
+      {
+        "section_title": "9. Emerging Trends and Future Directions",
+        "section_text": "Recent research explores probabilistic controllers that jointly optimize accuracy and cost, framing verification as a decision-theoretic problem rather than a fixed pipeline (Asai et al., 2023, [https://arxiv.org/abs/2305.14627](https://arxiv.org/abs/2305.14627)). There is growing interest in multilingual verification benchmarks and governance-oriented evaluation metrics that assess trace completeness and legal defensibility (Ji et al., 2023, [https://doi.org/10.1145/3571730](https://doi.org/10.1145/3571730)).\n\nThese trends suggest a shift from monolithic reasoning models toward modular, auditable agent systems.\n\n---"
+      },
+      {
+        "section_title": "10. Alternative Perspectives and Related Paradigms",
+        "section_text": "In settings where external evidence is sparse or unverifiable, purely symbolic compliance engines or human-in-the-loop auditing may be more appropriate than automated verification agents (Baldwin et al., 2006, [https://doi.org/10.1016/j.intacc.2006.03.002](https://doi.org/10.1016/j.intacc.2006.03.002)). Conversely, for exploratory analysis or low-stakes summarization, lightweight RAG systems without adaptive control may suffice (Lewis et al., 2020, [https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)).\n\nThese alternatives highlight that cost-aware verification agents are most appropriate when correctness, auditability, and scalability are jointly required.\n\n---"
+      },
+      {
+        "section_title": "11. Annotated Bibliography",
+        "section_text": "**Christensen et al. (2021)** \u2014 Demonstrates regulatory consequences of unverifiable ESG disclosures.\n[https://doi.org/10.1007/s11142-021-09609-5](https://doi.org/10.1007/s11142-021-09609-5)\n\n**Lewis et al. (2020)** \u2014 Introduces retrieval-augmented generation as a dominant grounding paradigm.\n[https://arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)\n\n**Ji et al. (2023)** \u2014 Comprehensive survey on hallucination and verification in NLP systems.\n[https://doi.org/10.1145/3571730](https://doi.org/10.1145/3571730)\n\n**Asai et al. (2023)** \u2014 Proposes adaptive retrieval and cost-aware reasoning strategies.\n[https://arxiv.org/abs/2305.14627](https://arxiv.org/abs/2305.14627)\n\n**Dhuliawala et al. (2023)** \u2014 Introduces Chain-of-Verification for grounded reasoning.\n[https://arxiv.org/abs/2309.11495](https://arxiv.org/abs/2309.11495)\n\n**Ruder et al. (2019)** \u2014 Analyzes challenges in multilingual transfer learning.\n[https://arxiv.org/abs/1901.07291](https://arxiv.org/abs/1901.07291)"
+      }
+    ],
+    "citations": [],
+    "bibliography": [
+      {
+        "authors": "Christensen et al.",
+        "year": "2021",
+        "description": "Demonstrates regulatory consequences of unverifiable ESG disclosures.",
+        "url": "https://doi.org/10.1007/s11142-021-09609-5"
+      },
+      {
+        "authors": "Lewis et al.",
+        "year": "2020",
+        "description": "Introduces retrieval-augmented generation as a dominant grounding paradigm.",
+        "url": "https://arxiv.org/abs/2005.11401"
+      },
+      {
+        "authors": "Ji et al.",
+        "year": "2023",
+        "description": "Comprehensive survey on hallucination and verification in NLP systems.",
+        "url": "https://doi.org/10.1145/3571730"
+      },
+      {
+        "authors": "Asai et al.",
+        "year": "2023",
+        "description": "Proposes adaptive retrieval and cost-aware reasoning strategies.",
+        "url": "https://arxiv.org/abs/2305.14627"
+      },
+      {
+        "authors": "Dhuliawala et al.",
+        "year": "2023",
+        "description": "Introduces Chain-of-Verification for grounded reasoning.",
+        "url": "https://arxiv.org/abs/2309.11495"
+      },
+      {
+        "authors": "Ruder et al.",
+        "year": "2019",
+        "description": "Analyzes challenges in multilingual transfer learning.",
+        "url": "https://arxiv.org/abs/1901.07291"
+      }
+    ]
+  }
+]
