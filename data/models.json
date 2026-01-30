@@ -1,0 +1,29 @@
+{
+  "lmstudio": {
+    "allowed_models": [
+      {
+        "id": "mistralai/ministral-3-3b",
+        "label": "Ministral 3.3B (Local Only)"
+      }
+    ],
+    "default": "mistralai/ministral-3-3b"
+  },
+
+  "openrouter": {
+    "allowed_models": [
+      {
+        "id": "mistralai/mistral-7b-instruct",
+        "label": "Mistral 7B Instruct"
+      },
+      {
+        "id": "meta-llama/llama-3-8b-instruct",
+        "label": "LLaMA 3 8B Instruct"
+      },
+      {
+        "id": "google/gemma-7b-it",
+        "label": "Gemma 7B IT"
+      }
+    ],
+    "default": "mistralai/mistral-7b-instruct"
+  }
+}
