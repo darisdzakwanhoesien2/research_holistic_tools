@@ -1,0 +1,7 @@
+{
+  "ESG": ["esg", "environmental", "social", "governance", "sustainability", "sustainable", "green"],
+  "AI": ["artificial intelligence", "machine learning", "deep learning", "neural"],
+  "Finance": ["finance", "financial", "investment", "risk", "trading"],
+  "CSR": ["corporate social responsibility", "csr", "stakeholder"],
+  "Energy": ["energy", "solar", "renewable", "climate"]
+}
