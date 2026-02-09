@@ -1,0 +1,38 @@
+{
+  "abstract": [
+    "abstract"
+  ],
+  "introduction": [
+    "introduction",
+    "background"
+  ],
+  "literature": [
+    "literature review",
+    "review of literature",
+    "prior research",
+    "related work",
+    "theoretical background"
+  ],
+  "methodology": [
+    "methodology",
+    "methods",
+    "research design",
+    "data and methods",
+    "empirical design"
+  ],
+  "discussion": [
+    "discussion",
+    "results and discussion",
+    "analysis"
+  ],
+  "future_studies": [
+    "future research",
+    "future studies",
+    "implications for future research"
+  ],
+  "conclusion": [
+    "conclusion",
+    "concluding remarks",
+    "summary and conclusion"
+  ]
+}
