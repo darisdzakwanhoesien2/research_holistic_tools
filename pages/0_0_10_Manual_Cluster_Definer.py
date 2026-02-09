@@ -11,10 +11,10 @@ from sklearn.cluster import KMeans
 DATA_ROOT = "data/ocr_pdf"
 APPROVED_FILE = "data/approved_segments.json"
 
-st.title("🧠 Custom Header Segmentation + Clustering")
+st.title("🧠 Custom Header Segmentation + Clustering (Header-Keyed)")
 
 # ==========================================================
-# SAFE FOLDER LISTING (NO .DS_STORE ERROR)
+# SAFE PDF FOLDER LISTING
 # ==========================================================
 
 pdf_folders = [
@@ -39,9 +39,7 @@ def read_all_pages(pdf_name):
     if not os.path.exists(folder_path):
         return ""
 
-    page_files = sorted(
-        glob.glob(os.path.join(folder_path, "*.md"))
-    )
+    page_files = sorted(glob.glob(os.path.join(folder_path, "*.md")))
 
     full_text = ""
 
@@ -55,19 +53,25 @@ def read_all_pages(pdf_name):
 full_text = read_all_pages(selected_pdf)
 
 if not full_text:
-    st.warning("No markdown pages found.")
+    st.warning("No markdown content found.")
     st.stop()
 
 # ==========================================================
-# USER INPUT HEADERS
+# USER HEADER INPUT
 # ==========================================================
 
 st.subheader("📌 Provide Custom Header Boundaries")
 
 user_input = st.text_area(
     "Paste Header Lines",
-    height=150,
-    placeholder="## 3. Results and Discussion\n4. Directions for Future Research"
+    height=200,
+    placeholder="""# Abstract
+# 1. Introduction
+## 2. Materials and Methods
+## 3. Results and Discussion
+4. Directions for Future Research
+# 5. Conclusions
+# References"""
 )
 
 # ==========================================================
@@ -93,32 +97,37 @@ def split_by_custom_headers(full_text, header_lines):
 
     positions = sorted(positions, key=lambda x: x[0])
 
-    segments = []
+    segments = {}
 
     if not positions:
         return segments
 
-    # ------------------------------------------
+    # ======================================================
     # 1️⃣ TEXT BEFORE FIRST HEADER
-    # ------------------------------------------
+    # ======================================================
 
     first_start = positions[0][0]
 
     if first_start > 0:
         pre_text = full_text[:first_start].strip()
-        if len(pre_text) > 50:
-            segments.append(pre_text)
+        if len(pre_text) > 30:
+            segments["Pre-Section"] = pre_text
 
-    # ------------------------------------------
+    # ======================================================
     # 2️⃣ HEADER SEGMENTS
-    # ------------------------------------------
+    # ======================================================
 
     for i in range(len(positions)):
+
         start = positions[i][0]
+        header_label = positions[i][1]
+
         end = positions[i + 1][0] if i + 1 < len(positions) else len(full_text)
 
         segment_text = full_text[start:end].strip()
-        segments.append(segment_text)
+
+        if len(segment_text) > 30:
+            segments[header_label] = segment_text
 
     return segments
 
@@ -134,14 +143,14 @@ if user_input:
     segments = split_by_custom_headers(full_text, header_lines)
 
     if not segments:
-        st.warning("No matching headers found in paper.")
+        st.warning("No matching headers found.")
         st.stop()
 
     st.subheader("📄 Segments Created")
 
     df_segments = pd.DataFrame({
-        "segment_id": range(len(segments)),
-        "preview": [s[:120] + "..." for s in segments]
+        "header": list(segments.keys()),
+        "preview": [text[:120] + "..." for text in segments.values()]
     })
 
     st.dataframe(df_segments)
@@ -150,24 +159,25 @@ if user_input:
     # FULL TEXT VIEW
     # ==========================================================
 
-    selected_segment = st.selectbox(
-        "Select Segment to View Full Text",
-        df_segments["segment_id"]
+    selected_header = st.selectbox(
+        "Select Section to View Full Text",
+        list(segments.keys())
     )
 
     st.text_area(
-        "Full Segment Text",
-        segments[selected_segment],
+        "Full Section Text",
+        segments[selected_header],
         height=300
     )
 
     # ==========================================================
-    # CLUSTERING (SAFE SLIDER)
+    # CLUSTERING
     # ==========================================================
 
     st.subheader("📊 Run Clustering")
 
-    max_clusters = min(8, len(segments))
+    segment_texts = list(segments.values())
+    max_clusters = min(8, len(segment_texts))
 
     if max_clusters < 2:
         st.info("Not enough segments to cluster.")
@@ -187,25 +197,26 @@ if user_input:
                 max_features=2000
             )
 
-            X = vectorizer.fit_transform(segments)
+            X = vectorizer.fit_transform(segment_texts)
 
             model = KMeans(n_clusters=n_clusters, random_state=42)
             cluster_labels = model.fit_predict(X)
 
-            df_segments["cluster"] = cluster_labels
+            df_cluster = pd.DataFrame({
+                "header": list(segments.keys()),
+                "cluster": cluster_labels
+            })
 
-            st.subheader("📋 Clustered Segments")
-            st.dataframe(df_segments)
+            st.subheader("📋 Clustered Sections")
+            st.dataframe(df_cluster)
 
-            # Distribution plot
-
-            cluster_counts = df_segments["cluster"].value_counts().sort_index()
+            cluster_counts = df_cluster["cluster"].value_counts().sort_index()
 
             fig = plt.figure()
             plt.bar(cluster_counts.index.astype(str), cluster_counts.values)
             plt.xlabel("Cluster")
-            plt.ylabel("Number of Segments")
-            plt.title("Segment Cluster Distribution")
+            plt.ylabel("Number of Sections")
+            plt.title("Cluster Distribution")
 
             st.pyplot(fig)
 
@@ -213,9 +224,9 @@ if user_input:
     # APPROVE & STORE
     # ==========================================================
 
-    st.subheader("✅ Approve Segmentation")
+    st.subheader("✅ Approve & Store Segmentation")
 
-    if st.button("Approve & Store Segments"):
+    if st.button("Approve Segmentation"):
 
         os.makedirs("data", exist_ok=True)
 
@@ -230,7 +241,491 @@ if user_input:
         with open(APPROVED_FILE, "w", encoding="utf-8") as f:
             json.dump(approved_data, f, indent=4)
 
-        st.success("Segments stored successfully!")
+        st.success("Segmentation stored successfully!")
+
+
+# import streamlit as st
+# import os
+# import glob
+# import re
+# import json
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.cluster import KMeans
+
+# DATA_ROOT = "data/ocr_pdf"
+# APPROVED_FILE = "data/approved_segments.json"
+
+# st.title("🧠 Custom Header Segmentation + Clustering (Full Coverage)")
+
+# # ==========================================================
+# # SAFE FOLDER LISTING
+# # ==========================================================
+
+# pdf_folders = [
+#     d for d in os.listdir(DATA_ROOT)
+#     if os.path.isdir(os.path.join(DATA_ROOT, d))
+#     and not d.startswith(".")
+# ]
+
+# if not pdf_folders:
+#     st.warning("No PDF folders found.")
+#     st.stop()
+
+# selected_pdf = st.sidebar.selectbox("Select PDF Folder", pdf_folders)
+
+# # ==========================================================
+# # LOAD FULL TEXT
+# # ==========================================================
+
+# def read_all_pages(pdf_name):
+#     folder_path = os.path.join(DATA_ROOT, pdf_name, "pages")
+
+#     page_files = sorted(
+#         glob.glob(os.path.join(folder_path, "*.md"))
+#     )
+
+#     full_text = ""
+
+#     for file in page_files:
+#         with open(file, "r", encoding="utf-8") as f:
+#             full_text += f.read() + "\n"
+
+#     return full_text
+
+
+# full_text = read_all_pages(selected_pdf)
+
+# if not full_text:
+#     st.warning("No markdown pages found.")
+#     st.stop()
+
+# # ==========================================================
+# # USER INPUT HEADERS
+# # ==========================================================
+
+# st.subheader("📌 Provide Custom Header Boundaries")
+
+# user_input = st.text_area(
+#     "Paste Header Lines",
+#     height=180,
+#     placeholder="""# Abstract
+# # 1. Introduction
+# ## 2. Materials and Methods
+# ## 3. Results and Discussion
+# 4. Directions for Future Research
+# # 5. Conclusions
+# # References"""
+# )
+
+# # ==========================================================
+# # HELPER FUNCTIONS
+# # ==========================================================
+
+# def clean_header(header):
+#     header = re.sub(r"^#+\s*", "", header)
+#     header = re.sub(r"^\d+\.\s*", "", header)
+#     return header.strip()
+
+
+# def split_by_custom_headers(full_text, header_lines):
+
+#     cleaned_headers = [clean_header(h) for h in header_lines if h.strip()]
+
+#     positions = []
+
+#     for header in cleaned_headers:
+#         match = re.search(re.escape(header), full_text, re.IGNORECASE)
+#         if match:
+#             positions.append((match.start(), header))
+
+#     positions = sorted(positions, key=lambda x: x[0])
+
+#     segments = []
+
+#     if not positions:
+#         return segments
+
+#     # ======================================================
+#     # 1️⃣ TEXT BEFORE FIRST HEADER
+#     # ======================================================
+
+#     first_start = positions[0][0]
+
+#     if first_start > 0:
+#         pre_text = full_text[:first_start].strip()
+#         if len(pre_text) > 30:
+#             segments.append(pre_text)
+
+#     # ======================================================
+#     # 2️⃣ BETWEEN HEADERS
+#     # ======================================================
+
+#     for i in range(len(positions)):
+
+#         start = positions[i][0]
+#         end = positions[i + 1][0] if i + 1 < len(positions) else len(full_text)
+
+#         segment_text = full_text[start:end].strip()
+
+#         if len(segment_text) > 30:
+#             segments.append(segment_text)
+
+#     # ======================================================
+#     # 3️⃣ TEXT AFTER LAST HEADER (SAFETY CHECK)
+#     # ======================================================
+
+#     last_header_end = positions[-1][0]
+#     tail_text = full_text[last_header_end:].strip()
+
+#     if len(tail_text) > 30 and tail_text not in segments:
+#         segments.append(tail_text)
+
+#     return segments
+
+
+# # ==========================================================
+# # SEGMENTATION
+# # ==========================================================
+
+# if user_input:
+
+#     header_lines = user_input.split("\n")
+
+#     segments = split_by_custom_headers(full_text, header_lines)
+
+#     if not segments:
+#         st.warning("No matching headers found in paper.")
+#         st.stop()
+
+#     st.subheader("📄 Segments Created (Full Coverage)")
+
+#     df_segments = pd.DataFrame({
+#         "segment_id": range(len(segments)),
+#         "preview": [s[:120] + "..." for s in segments]
+#     })
+
+#     st.dataframe(df_segments)
+
+#     # ==========================================================
+#     # FULL TEXT VIEW
+#     # ==========================================================
+
+#     selected_segment = st.selectbox(
+#         "Select Segment to View Full Text",
+#         df_segments["segment_id"]
+#     )
+
+#     st.text_area(
+#         "Full Segment Text",
+#         segments[selected_segment],
+#         height=300
+#     )
+
+#     # ==========================================================
+#     # CLUSTERING
+#     # ==========================================================
+
+#     st.subheader("📊 Run Clustering")
+
+#     max_clusters = min(8, len(segments))
+
+#     if max_clusters < 2:
+#         st.info("Not enough segments to cluster.")
+#     else:
+
+#         n_clusters = st.slider(
+#             "Number of Clusters",
+#             min_value=2,
+#             max_value=max_clusters,
+#             value=2
+#         )
+
+#         if st.button("🚀 Run Clustering"):
+
+#             vectorizer = TfidfVectorizer(
+#                 stop_words="english",
+#                 max_features=2000
+#             )
+
+#             X = vectorizer.fit_transform(segments)
+
+#             model = KMeans(n_clusters=n_clusters, random_state=42)
+#             cluster_labels = model.fit_predict(X)
+
+#             df_segments["cluster"] = cluster_labels
+
+#             st.subheader("📋 Clustered Segments")
+#             st.dataframe(df_segments)
+
+#             cluster_counts = df_segments["cluster"].value_counts().sort_index()
+
+#             fig = plt.figure()
+#             plt.bar(cluster_counts.index.astype(str), cluster_counts.values)
+#             plt.xlabel("Cluster")
+#             plt.ylabel("Number of Segments")
+#             plt.title("Segment Cluster Distribution")
+
+#             st.pyplot(fig)
+
+#     # ==========================================================
+#     # APPROVE & STORE
+#     # ==========================================================
+
+#     st.subheader("✅ Approve & Store Segments")
+
+#     if st.button("Approve Segmentation"):
+
+#         os.makedirs("data", exist_ok=True)
+
+#         if os.path.exists(APPROVED_FILE):
+#             with open(APPROVED_FILE, "r", encoding="utf-8") as f:
+#                 approved_data = json.load(f)
+#         else:
+#             approved_data = {}
+
+#         approved_data[selected_pdf] = segments
+
+#         with open(APPROVED_FILE, "w", encoding="utf-8") as f:
+#             json.dump(approved_data, f, indent=4)
+
+#         st.success("Full segmentation stored successfully!")
+
+
+# import streamlit as st
+# import os
+# import glob
+# import re
+# import json
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.cluster import KMeans
+
+# DATA_ROOT = "data/ocr_pdf"
+# APPROVED_FILE = "data/approved_segments.json"
+
+# st.title("🧠 Custom Header Segmentation + Clustering")
+
+# # ==========================================================
+# # SAFE FOLDER LISTING (NO .DS_STORE ERROR)
+# # ==========================================================
+
+# pdf_folders = [
+#     d for d in os.listdir(DATA_ROOT)
+#     if os.path.isdir(os.path.join(DATA_ROOT, d))
+#     and not d.startswith(".")
+# ]
+
+# if not pdf_folders:
+#     st.warning("No PDF folders found.")
+#     st.stop()
+
+# selected_pdf = st.sidebar.selectbox("Select PDF Folder", pdf_folders)
+
+# # ==========================================================
+# # LOAD FULL TEXT
+# # ==========================================================
+
+# def read_all_pages(pdf_name):
+#     folder_path = os.path.join(DATA_ROOT, pdf_name, "pages")
+
+#     if not os.path.exists(folder_path):
+#         return ""
+
+#     page_files = sorted(
+#         glob.glob(os.path.join(folder_path, "*.md"))
+#     )
+
+#     full_text = ""
+
+#     for file in page_files:
+#         with open(file, "r", encoding="utf-8") as f:
+#             full_text += f.read() + "\n"
+
+#     return full_text
+
+
+# full_text = read_all_pages(selected_pdf)
+
+# if not full_text:
+#     st.warning("No markdown pages found.")
+#     st.stop()
+
+# # ==========================================================
+# # USER INPUT HEADERS
+# # ==========================================================
+
+# st.subheader("📌 Provide Custom Header Boundaries")
+
+# user_input = st.text_area(
+#     "Paste Header Lines",
+#     height=150,
+#     placeholder="## 3. Results and Discussion\n4. Directions for Future Research"
+# )
+
+# # ==========================================================
+# # HELPER FUNCTIONS
+# # ==========================================================
+
+# def clean_header(header):
+#     header = re.sub(r"^#+\s*", "", header)
+#     header = re.sub(r"^\d+\.\s*", "", header)
+#     return header.strip()
+
+
+# def split_by_custom_headers(full_text, header_lines):
+
+#     cleaned_headers = [clean_header(h) for h in header_lines if h.strip()]
+
+#     positions = []
+
+#     for header in cleaned_headers:
+#         match = re.search(re.escape(header), full_text, re.IGNORECASE)
+#         if match:
+#             positions.append((match.start(), header))
+
+#     positions = sorted(positions, key=lambda x: x[0])
+
+#     segments = []
+
+#     if not positions:
+#         return segments
+
+#     # ------------------------------------------
+#     # 1️⃣ TEXT BEFORE FIRST HEADER
+#     # ------------------------------------------
+
+#     first_start = positions[0][0]
+
+#     if first_start > 0:
+#         pre_text = full_text[:first_start].strip()
+#         if len(pre_text) > 50:
+#             segments.append(pre_text)
+
+#     # ------------------------------------------
+#     # 2️⃣ HEADER SEGMENTS
+#     # ------------------------------------------
+
+#     for i in range(len(positions)):
+#         start = positions[i][0]
+#         end = positions[i + 1][0] if i + 1 < len(positions) else len(full_text)
+
+#         segment_text = full_text[start:end].strip()
+#         segments.append(segment_text)
+
+#     return segments
+
+
+# # ==========================================================
+# # SEGMENTATION
+# # ==========================================================
+
+# if user_input:
+
+#     header_lines = user_input.split("\n")
+
+#     segments = split_by_custom_headers(full_text, header_lines)
+
+#     if not segments:
+#         st.warning("No matching headers found in paper.")
+#         st.stop()
+
+#     st.subheader("📄 Segments Created")
+
+#     df_segments = pd.DataFrame({
+#         "segment_id": range(len(segments)),
+#         "preview": [s[:120] + "..." for s in segments]
+#     })
+
+#     st.dataframe(df_segments)
+
+#     # ==========================================================
+#     # FULL TEXT VIEW
+#     # ==========================================================
+
+#     selected_segment = st.selectbox(
+#         "Select Segment to View Full Text",
+#         df_segments["segment_id"]
+#     )
+
+#     st.text_area(
+#         "Full Segment Text",
+#         segments[selected_segment],
+#         height=300
+#     )
+
+#     # ==========================================================
+#     # CLUSTERING (SAFE SLIDER)
+#     # ==========================================================
+
+#     st.subheader("📊 Run Clustering")
+
+#     max_clusters = min(8, len(segments))
+
+#     if max_clusters < 2:
+#         st.info("Not enough segments to cluster.")
+#     else:
+
+#         n_clusters = st.slider(
+#             "Number of Clusters",
+#             min_value=2,
+#             max_value=max_clusters,
+#             value=2
+#         )
+
+#         if st.button("🚀 Run Clustering"):
+
+#             vectorizer = TfidfVectorizer(
+#                 stop_words="english",
+#                 max_features=2000
+#             )
+
+#             X = vectorizer.fit_transform(segments)
+
+#             model = KMeans(n_clusters=n_clusters, random_state=42)
+#             cluster_labels = model.fit_predict(X)
+
+#             df_segments["cluster"] = cluster_labels
+
+#             st.subheader("📋 Clustered Segments")
+#             st.dataframe(df_segments)
+
+#             # Distribution plot
+
+#             cluster_counts = df_segments["cluster"].value_counts().sort_index()
+
+#             fig = plt.figure()
+#             plt.bar(cluster_counts.index.astype(str), cluster_counts.values)
+#             plt.xlabel("Cluster")
+#             plt.ylabel("Number of Segments")
+#             plt.title("Segment Cluster Distribution")
+
+#             st.pyplot(fig)
+
+#     # ==========================================================
+#     # APPROVE & STORE
+#     # ==========================================================
+
+#     st.subheader("✅ Approve Segmentation")
+
+#     if st.button("Approve & Store Segments"):
+
+#         os.makedirs("data", exist_ok=True)
+
+#         if os.path.exists(APPROVED_FILE):
+#             with open(APPROVED_FILE, "r", encoding="utf-8") as f:
+#                 approved_data = json.load(f)
+#         else:
+#             approved_data = {}
+
+#         approved_data[selected_pdf] = segments
+
+#         with open(APPROVED_FILE, "w", encoding="utf-8") as f:
+#             json.dump(approved_data, f, indent=4)
+
+#         st.success("Segments stored successfully!")
 
 
 
